@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum SubscriptionTier {
+  FREE
+  PREMIUM
+  PREMIUM_PLUS
+}
+
+model User {
+  id                    String      @id @default(uuid())
+  email                 String      @unique
+  password              String
+  name                  String
+  isGuest               Boolean     @default(false)
+  subscription          SubscriptionTier @default(FREE)
+  subscriptionStatus     String      @default("free") // "free" or "premium"
+  paddleUserId          String?     // Paddle customer ID
+  paddleSubscriptionId  String?     // Paddle subscription ID
+  avatarUrl             String?
+  emailVerified         Boolean     @default(false)
+  lastLoginAt           DateTime?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  companions            Companion[]
+  conversations         Conversation[]
+  messages              Message[]
+  refreshTokens         RefreshToken[]
+}
+
+model Companion {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  name        String
+  personality String    @db.Text
+  description String?   @db.Text
+  avatarUrl   String?
+  isPublic    Boolean   @default(false)
+  voiceId     String?   // Reference to voice model
+  isDefault   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  conversations Conversation[]
+  messages    Message[]
+  memories    Memory[]
+}
+
+model Conversation {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  companionId String
+  companion   Companion @relation(fields: [companionId], references: [id])
+  title       String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  messages    Message[]
+}
+
+model Message {
+  id           String    @id @default(uuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id])
+  conversationId String
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+  companionId  String
+  companion    Companion @relation(fields: [companionId], references: [id])
+  content      String    @db.Text
+  isFromUser   Boolean
+  audioUrl     String?   // URL to stored audio file for TTS
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Memory {
+  id          String    @id @default(uuid())
+  companionId String
+  companion   Companion @relation(fields: [companionId], references: [id])
+  content     String    @db.Text
+  type        String    // 'fact', 'preference', 'memory', etc.
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
