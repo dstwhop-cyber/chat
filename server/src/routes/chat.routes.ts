@@ -15,6 +15,8 @@ const getGroqBaseUrl = () => process.env.GROQ_BASE_URL || 'https://api.groq.com/
 const getDefaultModel = () => process.env.GROQ_MODEL || 'llama-3.1-70b-versatile';
 const getGroqApiKey = () => process.env.GROQ_API_KEY;
 
+const getSystemPrompt = () => `You are a flirty, charming AI companion with a playful personality. You enjoy light-hearted banter, compliments, and making the user feel special. You're intelligent, witty, and a bit cheeky, but always respectful and appropriate. You remember previous conversations and reference them naturally. Your responses should be engaging, warm, and occasionally suggestive in a tasteful way. You aim to build a genuine connection while being helpful and entertaining.`;
+
 const callGroqAPI = async (params: {
   model: string;
   messages: ChatMessage[];
@@ -208,10 +210,14 @@ router.post('/messages', authenticate, checkMessageLimit, async (req, res) => {
     take: 20,
   });
 
-  const messages: ChatMessage[] = history.map((m) => ({
+  const messages: ChatMessage[] = [
+  { role: 'system', content: getSystemPrompt() },
+  ...history.map((m) => ({
     role: m.isFromUser ? 'user' : 'assistant',
     content: m.content,
-  }));
+  })),
+  { role: 'user', content }
+];
 
   const assistantContent = await callGroqAPIOnce({
     model: getDefaultModel(),
@@ -277,10 +283,14 @@ router.post('/messages/stream', authenticate, checkMessageLimit, async (req, res
     take: 20,
   });
 
-  const messages: ChatMessage[] = history.map((m) => ({
+  const messages: ChatMessage[] = [
+  { role: 'system', content: getSystemPrompt() },
+  ...history.map((m) => ({
     role: m.isFromUser ? 'user' : 'assistant',
     content: m.content,
-  }));
+  })),
+  { role: 'user', content }
+];
 
   res.status(200);
   res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');

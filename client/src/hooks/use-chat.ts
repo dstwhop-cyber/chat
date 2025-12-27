@@ -157,7 +157,6 @@ export function useStreamMessage() {
         content,
         conversationId,
         companionId: conversation.companionId,
-        stream: true,
       });
 
       // Process the stream

@@ -23,7 +23,6 @@ export interface SendMessageParams {
   content: string;
   conversationId: string;
   companionId: string;
-  stream?: boolean;
 }
 
 export const chatService = {
@@ -66,10 +65,7 @@ export const chatService = {
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify({
-        ...params,
-        stream: true,
-      }),
+      body: JSON.stringify(params),
     });
 
     if (!response.body) {
