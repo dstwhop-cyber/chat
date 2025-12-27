@@ -1,15 +1,11 @@
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Icons } from "@/components/icons"
+import { Message } from "@/services/chat-service"
 
 interface ChatMessageProps extends React.HTMLAttributes<HTMLDivElement> {
-  message: {
-    id: string
-    content: string
-    role: 'user' | 'assistant'
-    timestamp: Date
+  message: Message & {
     avatarUrl?: string
-    isTyping?: boolean
   }
   isStreaming?: boolean
 }
@@ -20,7 +16,7 @@ export function ChatMessage({
   className,
   ...props
 }: ChatMessageProps) {
-  const { content, role, avatarUrl, isTyping } = message
+  const { content, role, avatarUrl } = message
   const isUser = role === 'user'
 
   return (
@@ -57,7 +53,7 @@ export function ChatMessage({
           </span>
         </div>
         <div className="prose prose-sm dark:prose-invert max-w-none">
-          {isTyping ? (
+          {isStreaming && !isUser && !content ? (
             <div className="flex space-x-1">
               <div className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '0ms' }} />
               <div className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '150ms' }} />

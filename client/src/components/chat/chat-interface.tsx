@@ -8,14 +8,7 @@ import { ChatInput } from './chat-input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-
-interface Message {
-  id: string;
-  content: string;
-  role: 'user' | 'assistant';
-  timestamp: Date;
-  isTyping?: boolean;
-}
+import { Message } from '@/services/chat-service';
 
 interface ChatInterfaceProps {
   className?: string;
@@ -64,15 +57,17 @@ export function ChatInterface({
       id: `user-${Date.now()}`,
       content,
       role: 'user',
-      timestamp: new Date(),
+      timestamp: new Date().toISOString(),
+      conversationId: '', // This will be filled by the actual implementation
     };
 
     const botMessage: Message = {
       id: `bot-${Date.now()}`,
       content: '',
       role: 'assistant',
-      timestamp: new Date(),
-      isTyping: true,
+      timestamp: new Date().toISOString(),
+      conversationId: '', // This will be filled by the actual implementation
+      isStreaming: true,
     };
 
     // Optimistically update UI
@@ -83,16 +78,16 @@ export function ChatInterface({
         await onSendMessage(content);
       }
       
-      // Update the last message to remove typing indicator
+      // Update the last message to remove streaming indicator
       setMessages((prev) =>
         prev.map((msg, idx) =>
-          idx === prev.length - 1 ? { ...msg, isTyping: false } : msg
+          idx === prev.length - 1 ? { ...msg, isStreaming: false } : msg
         )
       );
     } catch (error) {
       console.error('Failed to send message:', error);
-      // Remove the typing indicator on error
-      setMessages((prev) => prev.filter((msg) => !msg.isTyping));
+      // Remove the streaming indicator on error
+      setMessages((prev) => prev.filter((msg) => !msg.isStreaming));
     }
   };
 

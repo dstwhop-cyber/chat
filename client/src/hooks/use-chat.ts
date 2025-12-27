@@ -91,9 +91,17 @@ export function useSendMessage() {
   const { conversationId } = useParams<{ conversationId: string }>();
 
   return useMutation({
-    mutationFn: async (params: Omit<SendMessageParams, 'conversationId'>) => {
+    mutationFn: async (params: Omit<SendMessageParams, 'conversationId' | 'companionId'>) => {
       if (!conversationId) throw new Error('No conversation selected');
-      return chatService.sendMessage({ ...params, conversationId });
+      
+      // Get conversation to extract companionId
+      const conversation = await chatService.getConversation(conversationId);
+      
+      return chatService.sendMessage({ 
+        ...params, 
+        conversationId,
+        companionId: conversation.companionId
+      });
     },
     onMutate: async (newMessage) => {
       // Optimistic update
@@ -142,9 +150,13 @@ export function useStreamMessage() {
     mutationFn: async (content: string) => {
       if (!conversationId) throw new Error('No conversation selected');
       
+      // Get conversation to extract companionId
+      const conversation = await chatService.getConversation(conversationId);
+      
       const generator = chatService.streamMessage({
         content,
         conversationId,
+        companionId: conversation.companionId,
         stream: true,
       });
 

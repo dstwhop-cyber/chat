@@ -21,7 +21,7 @@ export interface Conversation {
 
 export interface SendMessageParams {
   content: string;
-  conversationId?: string;
+  conversationId: string;
   companionId: string;
   stream?: boolean;
 }
