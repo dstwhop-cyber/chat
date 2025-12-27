@@ -5,6 +5,8 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { Server } from 'socket.io';
 import { PrismaClient } from '@prisma/client';
 import { errorHandler, notFound } from '@/middleware/error.middleware';
@@ -17,6 +19,10 @@ import modelsRoutes from '@/routes/models.routes';
 import { initSocket } from '@/socket';
 import { logger } from '@/utils/logger';
 import { initializePaddle } from '@/lib/paddle';
+
+// Fix __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Initialize Express
 const app = express();
@@ -37,7 +43,11 @@ const prisma = new PrismaClient();
 app.use(helmet());
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
+    // In production, allow same origin and development origins
+    const isProduction = process.env.NODE_ENV === 'production';
+    if (isProduction && (!origin || origin === process.env.RENDER_EXTERNAL_URL)) {
+      return callback(null, true);
+    }
     const allowed = [frontendUrl, 'http://localhost:5173'];
     if (allowed.includes(origin)) return callback(null, true);
     return callback(new Error('Not allowed by CORS'));
@@ -48,6 +58,11 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev', { stream: { write: (message) => logger.info(message.trim()) } }));
+
+// Serve static files from React app
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../../client/dist')));
+}
 
 // Initialize Socket.IO
 initSocket(io, prisma);
@@ -68,8 +83,17 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// 404 handler
-app.use(notFound);
+// Serve React app for all non-API routes in production
+if (process.env.NODE_ENV === 'production') {
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
+  });
+}
+
+// 404 handler for API routes only in development
+if (process.env.NODE_ENV !== 'production') {
+  app.use(notFound);
+}
 
 // Error handler
 app.use(errorHandler);

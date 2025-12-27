@@ -1,0 +1,46 @@
+services:
+  # Type of service
+  - type: web
+  
+    # Name of your service (optional)
+    name: ob-chat
+    
+    # Runtime environment
+    runtime: node
+    
+    # Build and start commands
+    buildCommand: 'npm run predeploy && npm run build'
+    startCommand: 'npm start'
+    
+    # Directory where your code lives
+    rootDir: server
+    
+    # Environment variables
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_BASE_URL
+        value: https://api.groq.com/openai/v1
+      - key: GROQ_MODEL
+        value: llama-3.1-70b-versatile
+      - key: JWT_SECRET
+        sync: false
+      - key: PADDLE_API_KEY
+        sync: false
+      - key: PADDLE_ENVIRONMENT
+        value: sandbox
+      - key: PADDLE_WEBHOOK_SECRET
+        sync: false
+    
+    # Health check
+    healthCheckPath: /health
+    
+    # Auto-deploy settings
+    autoDeploy: yes
+    
+    # Plan (optional)
+    plan: starter
