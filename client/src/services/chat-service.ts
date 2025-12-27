@@ -7,6 +7,7 @@ export interface Message {
   role: 'user' | 'assistant';
   timestamp: string;
   conversationId: string;
+  isStreaming?: boolean;
 }
 
 export interface Conversation {
